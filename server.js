@@ -4,7 +4,6 @@ const cors = require('cors');
 const app = express();
 const path = require('path');
 
-
 app.use(cors());
 app.use(express.json());
 
@@ -58,8 +57,6 @@ async function getChannelVideos(login) {
     try {
         const response = await axios.post('https://gql.twitch.tv/gql', data, { headers: { 'Client-ID': CLIENT_ID } });
         if (!response.data.data.user) return null;
-        
-        // On nettoie la réponse pour renvoyer une liste simple
         return response.data.data.user.videos.edges.map(edge => edge.node);
     } catch (e) {
         return null;
@@ -135,32 +132,26 @@ async function storyboardHack(seekPreviewsURL) {
     return null;
 }
 
+// Sert les fichiers statiques (comme index.html s'il est dans public, ou le dossier racine)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- ROUTES ---
 
-// Route 1 : Récupérer les VODs d'une chaîne
 app.get('/api/get-channel-videos', async (req, res) => {
     const channelName = req.query.name;
     if (!channelName) return res.status(400).json({ error: 'Nom de chaîne manquant' });
-
     console.log(`\n🔎 Recherche chaîne : ${channelName}`);
-    
     const videos = await getChannelVideos(channelName);
-    
     if (videos) {
-        console.log(`✅ ${videos.length} VODs trouvées.`);
         return res.json({ videos: videos });
     } else {
         return res.status(404).json({ error: "Chaîne introuvable ou aucune VOD." });
     }
 });
 
-// Route 2 : Débloquer une VOD spécifique (Existante)
 app.get('/api/get-m3u8', async (req, res) => {
     const vodId = req.query.id;
     if (!vodId) return res.status(400).send('ID manquant');
-
     console.log(`\n🔎 Analyse VOD : ${vodId}`);
 
     const tokenData = await getAccessToken(vodId);
@@ -169,11 +160,7 @@ app.get('/api/get-m3u8', async (req, res) => {
         try {
             const check = await axios.get(url, AXIOS_CONFIG);
             if (check.data && typeof check.data === 'string' && check.data.includes('#EXTM3U')) {
-                console.log("✅ SUCCÈS (Officiel)");
-                return res.json({ 
-                    links: { "Auto (Officiel)": url },
-                    best: url
-                });
+                return res.json({ links: { "Auto (Officiel)": url }, best: url });
             }
         } catch (e) {}
     }
@@ -181,20 +168,12 @@ app.get('/api/get-m3u8', async (req, res) => {
     const metadata = await getVodStoryboardData(vodId);
     if (metadata && metadata.seekPreviewsURL) {
         const links = await storyboardHack(metadata.seekPreviewsURL);
-        
         if (links) {
-            console.log(`✅ SUCCÈS : ${Object.keys(links).length} qualités trouvées.`);
             const best = Object.values(links)[0];
-            
-            return res.json({
-                links: links,
-                best: best,
-                info: `VOD de ${metadata.owner.login}`
-            });
+            return res.json({ links: links, best: best, info: `VOD de ${metadata.owner.login}` });
         }
     }
 
-    console.log("❌ INTROUVABLE.");
     res.status(404).json({ error: "VOD introuvable." });
 });
 
@@ -202,6 +181,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(3000, () => {
-    console.log('🚀 Serveur VOD + Recherche Chaîne prêt sur http://localhost:3000');
+// --- MODIFICATION CRITIQUE POUR RENDER ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Serveur prêt sur le port ${PORT}`);
 });
