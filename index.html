@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Twitch VOD Unlocker</title>
+    <title>Watch Twitch VODs Without Subscription</title>
     
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
@@ -11,7 +11,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #9146ff; --dark: #0e0e10; --card: #18181b; --text: #efeff1; --danger: #ff4f4d; --outplayer: #007aff; }
+        :root { --primary: #9146ff; --dark: #0e0e10; --card: #18181b; --text: #efeff1; --danger: #ff4f4d; --outplayer: #007aff; --vlc: #ff8800; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
@@ -41,14 +41,6 @@
         }
         #mobile-alert strong { color: var(--primary); display: block; margin-bottom: 5px; }
         
-        .alert-actions { display: flex; gap: 10px; margin-top: 10px; }
-        .alert-btn {
-            flex: 1; border: none; padding: 10px; border-radius: 8px; cursor: pointer;
-            font-weight: bold; color: white; transition: 0.2s; font-size: 0.85rem;
-        }
-        .btn-vlc { background: #ff8800; } /* Orange VLC */
-        .btn-outplayer { background: var(--outplayer); } /* Bleu Outplayer */
-        
         /* TABS */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: #26262c; padding: 5px; border-radius: 12px; }
         .tab-btn {
@@ -75,9 +67,12 @@
         .btn-primary:active { transform: scale(0.95); }
         .btn-secondary { background: #3a3a40; font-size: 0.9rem; width: 100%; margin-top: 10px; }
         
-        /* Boutons d'action bas de page */
-        .action-buttons { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        /* Boutons d'action */
+        .action-buttons { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
         .action-buttons button { flex: 1; min-width: 120px; }
+
+        /* Classes utilitaires */
+        .mobile-only { display: none; }
 
         /* GRILLE VOD */
         #vod-list {
@@ -131,19 +126,19 @@
 <body>
 
     <div class="container">
-        <h1>🔓 Twitch VOD Unlocker</h1>
+        <h1>Watch Twitch VODs Without Subscription</h1>
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('direct')">Lien / ID</button>
             <button class="tab-btn" onclick="switchTab('channel')">Streamer</button>
         </div>
 
-        <div id="mobile-alert">
-            <strong>📱 Mode Mobile Détecté</strong>
-            Pour une lecture parfaite sur iOS, nous recommandons d'utiliser une application externe :
-            <div class="alert-actions">
-                <button class="alert-btn btn-outplayer" onclick="openInOutplayer()">▶️ Outplayer</button>
-                <button class="alert-btn btn-vlc" onclick="openInVLC()">🟠 VLC</button>
+        <div id="mobile-alert" class="mobile-only">
+            <strong>📱 Mode Mobile</strong>
+            Astuce : utilisez Outplayer ou VLC pour une meilleure lecture.
+            <div class="action-buttons" style="margin-top:10px;">
+                <button class="btn-secondary" style="background:var(--outplayer)" onclick="openInOutplayer()">Outplayer</button>
+                <button class="btn-secondary" style="background:var(--vlc)" onclick="openInVLC_Mobile()">VLC</button>
             </div>
         </div>
 
@@ -171,17 +166,18 @@
         <div id="options-bar">
             <label>Qualité :</label>
             <select id="qualitySelect" onchange="changeQuality()"></select>
-            <button class="btn-secondary" onclick="downloadM3U8()">📥 Télécharger la vidéo</button>
+            <button class="btn-secondary" onclick="downloadM3U8()">📥 Télécharger la vidéo (Fichier)</button>
         </div>
 
         <div id="vlc-section" class="vlc-section">
-            <div style="font-size: 0.8rem; color: #aaa;">Lien externe (VLC / Outplayer) :</div>
+            <div style="font-size: 0.8rem; color: #aaa;">Lien externe / Lecteur :</div>
             <input type="text" id="vlcLink" class="vlc-link" readonly onclick="this.select()">
             
             <div class="action-buttons">
                 <button class="btn-secondary" onclick="copyLink()">Copier</button>
-                <button class="btn-secondary" style="background:var(--outplayer)" onclick="openInOutplayer()">Outplayer</button>
-                <button class="btn-secondary" style="background:#ff8800" onclick="openInVLC()">VLC</button>
+                
+                <button class="btn-secondary mobile-only" style="background:var(--outplayer)" onclick="openInOutplayer()">Outplayer</button>
+                <button class="btn-secondary mobile-only" style="background:var(--vlc)" onclick="openInVLC_Mobile()">VLC App</button>
             </div>
         </div>
     </div>
@@ -208,7 +204,7 @@
             });
 
             if (isMobile()) {
-                mobileAlert.style.display = 'block';
+                document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'block');
             }
         });
 
@@ -346,8 +342,25 @@
             return key.replace(/p(\d+)/, 'p ($1fps)').toUpperCase();
         }
 
+        // --- NOUVELLE FONCTION DE TÉLÉCHARGEMENT ---
+        // Cette version crée un vrai fichier .m3u8 au lieu d'ouvrir un onglet
         function downloadM3U8() {
-            if (vlcInput.value) window.open(vlcInput.value, '_blank');
+            const url = vlcInput.value;
+            if (!url) return alert("Aucune vidéo chargée !");
+
+            // Contenu du fichier playlist
+            const m3uContent = `#EXTM3U\n#EXTINF:-1,Twitch VOD\n${url}`;
+            
+            // Création du fichier "virtuel"
+            const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'twitch_vod.m3u'; // Nom du fichier
+            
+            // Clic automatique
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function copyLink() {
@@ -356,10 +369,15 @@
             const btn = document.querySelector('.action-buttons button:first-child');
             const oldText = btn.textContent;
             btn.textContent = "Copié !";
-            setTimeout(() => btn.textContent = oldText, 2000);
+            btn.style.background = "#28a745";
+            setTimeout(() => { 
+                btn.textContent = oldText; 
+                btn.style.background = ""; 
+            }, 2000);
         }
 
-        function openInVLC() {
+        // --- FONCTIONS MOBILES ---
+        function openInVLC_Mobile() {
             const url = vlcInput.value;
             if (url) window.location.href = 'vlc://' + url;
             else alert("Chargez une vidéo d'abord !");
