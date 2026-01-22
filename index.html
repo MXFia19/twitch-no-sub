@@ -29,7 +29,6 @@
         }
         h1 { font-weight: 800; margin-bottom: 25px; color: #bf94ff; font-size: 1.8rem; }
         
-        /* NAVIGATION TABS */
         .tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
         .tab-btn {
             background: transparent; border: 2px solid #3a3a40; color: #aaa;
@@ -57,12 +56,11 @@
         .btn-secondary { background: #3a3a40; font-size: 0.9rem; padding: 10px 15px; }
         .btn-secondary:hover { background: #4e4e56; }
 
-        /* LISTE DES VODS DU STREAMER */
         #vod-list {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;
             margin-top: 20px; max-height: 400px; overflow-y: auto;
             padding: 10px; background: #131316; border-radius: 8px;
-            display: none; /* Caché par défaut */
+            display: none;
         }
         .vod-card {
             background: #1f1f23; border-radius: 8px; overflow: hidden; cursor: pointer;
@@ -190,7 +188,8 @@
             hidePlayer();
 
             try {
-                const response = await fetch('/api/get-channel-videos?name=...');
+                // CORRECTION ICI : On utilise bien la variable channelName avec les backticks ` `
+                const response = await fetch(`/api/get-channel-videos?name=${channelName}`);
                 const data = await response.json();
 
                 if (data.error) {
@@ -204,15 +203,12 @@
                 data.videos.forEach(vod => {
                     const card = document.createElement('div');
                     card.className = 'vod-card';
-                    card.onclick = () => loadVodFromCard(vod.id); // Lancer la VOD au clic
+                    card.onclick = () => loadVodFromCard(vod.id); 
 
-                    // Formatage de la durée
                     const minutes = Math.floor(vod.lengthSeconds / 60);
                     const hours = Math.floor(minutes / 60);
                     const remainingMin = minutes % 60;
                     const durationStr = hours > 0 ? `${hours}h${remainingMin}` : `${minutes}min`;
-
-                    // Formatage de la date
                     const dateStr = new Date(vod.publishedAt).toLocaleDateString('fr-FR');
 
                     card.innerHTML = `
@@ -246,7 +242,8 @@
             hidePlayer();
 
             try {
-                const response = await fetch('/api/get-m3u8?id=...');
+                // CORRECTION ICI : On utilise bien la variable vodId avec les backticks ` `
+                const response = await fetch(`/api/get-m3u8?id=${vodId}`);
                 const data = await response.json();
 
                 if (data.error) {
