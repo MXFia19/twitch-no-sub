@@ -33,7 +33,7 @@ const AXIOS_CONFIG = {
     validateStatus: status => status >= 200 && status < 500
 };
 
-// --- NOUVELLE FONCTION : Récupérer les VODs d'une chaîne ---
+// --- FONCTIONS ---
 async function getChannelVideos(login) {
     const data = {
         query: `query {
@@ -58,9 +58,7 @@ async function getChannelVideos(login) {
         const response = await axios.post('https://gql.twitch.tv/gql', data, { headers: { 'Client-ID': CLIENT_ID } });
         if (!response.data.data.user) return null;
         return response.data.data.user.videos.edges.map(edge => edge.node);
-    } catch (e) {
-        return null;
-    }
+    } catch (e) { return null; }
 }
 
 async function getAccessToken(vodId) {
@@ -123,20 +121,16 @@ async function storyboardHack(seekPreviewsURL) {
                 sortedLinks[quality] = unsortedLinks[quality];
             }
         }
-
         if (Object.keys(sortedLinks).length > 0) return sortedLinks;
 
-    } catch (e) {
-        console.log("Erreur:", e.message);
-    }
+    } catch (e) { console.log("Erreur:", e.message); }
     return null;
 }
 
-// Sert les fichiers statiques (comme index.html s'il est dans public, ou le dossier racine)
+// Servir les fichiers statiques (CSS/JS/HTML)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- ROUTES ---
-
 app.get('/api/get-channel-videos', async (req, res) => {
     const channelName = req.query.name;
     if (!channelName) return res.status(400).json({ error: 'Nom de chaîne manquant' });
@@ -181,7 +175,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// --- MODIFICATION CRITIQUE POUR RENDER ---
+// --- PORT CONFIG POUR RENDER ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Serveur prêt sur le port ${PORT}`);
