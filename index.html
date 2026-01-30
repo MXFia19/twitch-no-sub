@@ -164,9 +164,14 @@
         </div>
 
         <div id="options-bar">
-            <label>Qualité :</label>
-            <select id="qualitySelect" onchange="changeQuality()"></select>
-            <button class="btn-secondary" onclick="downloadM3U8()">📥 Télécharger la vidéo (Fichier)</button>
+        <label>Qualité :</label>
+        <select id="qualitySelect" onchange="changeQuality()"></select>
+        
+        <button class="btn-secondary" onclick="togglePiP()" style="background-color: #e6e619; color: black; margin-bottom: 10px;">
+        📺 Activer le mode PiP
+        </button>
+    
+        <button class="btn-secondary" onclick="downloadM3U8()">📥 Télécharger la vidéo (Fichier)</button>
         </div>
 
         <div id="vlc-section" class="vlc-section">
@@ -198,14 +203,32 @@
         const vodList = document.getElementById('vod-list');
 
         document.addEventListener('DOMContentLoaded', () => {
-            player = new Plyr(video, {
-                controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
-                settings: ['speed']
-            });
+    
+        player = new Plyr(video, {
 
-            if (isMobile()) {
-                document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'block');
-            }
+        controls: [
+        'play-large', 'play', 'progress', 'current-time', 
+        'mute', 'volume', 'settings', 
+        'pip', 'airplay', 'fullscreen'
+        ],
+        settings: ['speed']
+        });
+    
+        // --- AJOUT : DÉTECTION AUTOMATIQUE DE L'ID DANS L'URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const idFromUrl = urlParams.get('id');
+
+        if (idFromUrl) {
+        // On remplit le champ et on lance la recherche
+        document.getElementById('vodInput').value = idFromUrl;
+        switchTab('direct'); // On passe sur l'onglet "Direct"
+        searchVodById();     // On lance la vidéo !
+        }
+
+        if (isMobile()) {
+            // Cette ligne rend visible tous les éléments avec la classe "mobile-only"
+            document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'block');
+        }
         });
 
         function isMobile() {
@@ -315,22 +338,31 @@
         }
 
         function changeQuality() {
-            const url = currentLinks[qualitySelect.value];
-            if (!url) return;
-            vlcInput.value = url;
+    const rawUrl = currentLinks[qualitySelect.value];
+    if (!rawUrl) return;
 
-            if (Hls.isSupported()) {
-                if (hls) hls.destroy();
-                hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = url;
-                video.play();
-            }
-        }
+    // --- MODIFICATION ICI : On passe par le proxy ---
+    // On encode l'URL pour qu'elle passe bien dans les paramètres
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(rawUrl)}`;
+    
+    // On met à jour l'input VLC avec le VRAI lien (pour copier-coller)
+    vlcInput.value = rawUrl; 
 
+    if (Hls.isSupported()) {
+        if (hls) hls.destroy();
+        hls = new Hls();
+        
+        // On charge l'URL du PROXY dans le lecteur
+        hls.loadSource(proxyUrl);
+        
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Pour Safari (iPhone), on utilise aussi le proxy
+        video.src = proxyUrl;
+        video.play();
+    }
+}
         function extractVodId(input) {
             const match = input.match(/(?:videos\/|v\/)?(\d{8,})/);
             return match ? match[1] : input.trim();
@@ -402,6 +434,37 @@
             videoContainer.style.display = 'block';
             vlcSection.style.display = 'flex';
         }
+
+        // --- COLLE LA FONCTION ICI, JUSTE AVANT LA FIN ---
+
+        // --- FONCTION PIP UNIVERSELLE (Compatible iOS & PC) ---
+        function togglePiP() {
+            const video = document.getElementById('player');
+            
+            // 1. Méthode Standard (Chrome, Edge, Firefox)
+            if (document.pictureInPictureEnabled) {
+                if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture();
+                } else {
+                    video.requestPictureInPicture();
+                }
+            } 
+            // 2. Méthode Apple iOS (iPhone/iPad)
+            else if (video.webkitSupportsPresentationMode && typeof video.webkitSetPresentationMode === "function") {
+                const mode = video.webkitPresentationMode === "picture-in-picture" ? "inline" : "picture-in-picture";
+                video.webkitSetPresentationMode(mode);
+            } 
+            else {
+                alert("Le mode PiP n'est pas supporté par ce navigateur.");
+            }
+        }
+
     </script>
 </body>
 </html>
+
+
+
+
+
+
