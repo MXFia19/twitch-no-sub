@@ -3,122 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Watch Twitch VODs Without Subscription</title>
+    <title>Twitch VOD Unblocker</title>
     
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    
+    <script src="https://cdn.plyr.io/3.8.4/plyr.js"></script>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.8.4/plyr.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
+    
+   <style>
         :root { --primary: #9146ff; --dark: #0e0e10; --card: #18181b; --text: #efeff1; --danger: #ff4f4d; --outplayer: #007aff; --vlc: #ff8800; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, button, input, select { font-family: 'Inter', sans-serif; }
         
-        body {
-            font-family: 'Inter', sans-serif; background-color: var(--dark); color: var(--text);
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px;
+        body { 
+            background-color: var(--dark); color: var(--text); 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; 
         }
 
-        .container {
-            width: 100%; max-width: 900px; background: var(--card); padding: 25px;
-            border-radius: 16px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center;
+        .container { 
+            width: 100%; max-width: 900px; background: var(--card); padding: 25px; 
+            border-radius: 16px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center; 
+            position: relative; 
+            padding-top: 50px; 
         }
 
-        h1 { font-weight: 800; margin-bottom: 20px; color: #bf94ff; font-size: 1.5rem; }
-
-        /* ALERTE MOBILE */
-        #mobile-alert {
-            display: none;
-            background-color: rgba(145, 70, 255, 0.15);
-            border: 1px solid var(--primary);
-            color: #e0ccff;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: left;
-            font-size: 0.9rem;
-            animation: fadeIn 0.5s;
+        /* --- LE PETIT MENU DÉGUISÉ EN BOUTON --- */
+        #langSelect {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #26262c; 
+            border: 1px solid #3a3a40; 
+            color: #888;
+            padding: 5px 10px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            z-index: 10;
+            appearance: none; 
+            -webkit-appearance: none; 
+            -moz-appearance: none;
+            text-align: center;
+            width: auto;
         }
-        #mobile-alert strong { color: var(--primary); display: block; margin-bottom: 5px; }
-        
-        /* TABS */
+        #langSelect:hover { 
+            background: #3a3a40; 
+            color: white; 
+            border-color: var(--primary); 
+            transform: scale(1.05);
+        }
+        #langSelect:focus { outline: none; border-color: var(--primary); }
+
+        h1 { font-weight: 800; margin-bottom: 20px; color: #bf94ff; font-size: 1.5rem; margin-top: 0; }
+
+        #mobile-alert { 
+            display: none; background: rgba(145, 70, 255, 0.15); border: 1px solid var(--primary); 
+            color: #e0ccff; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; 
+        }
+        .mobile-only { display: none; }
+
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: #26262c; padding: 5px; border-radius: 12px; }
-        .tab-btn {
-            flex: 1; background: transparent; border: none; color: #aaa; padding: 10px;
+        .tab-btn { 
+            flex: 1; background: transparent; border: none; color: #aaa; padding: 10px; 
             border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s;
         }
         .tab-btn.active { background: var(--card); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .tab-content { display: none; animation: fadeIn 0.3s; }
         .tab-content.active { display: block; }
 
-        /* INPUTS */
         .search-bar { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;}
-        input[type="text"] {
-            background: #26262c; border: 2px solid #3a3a40; color: white; padding: 12px;
+        input[type="text"] { 
+            background: #26262c; border: 2px solid #3a3a40; color: white; padding: 12px; 
             border-radius: 10px; font-size: 1rem; flex: 1; min-width: 200px; transition: 0.2s;
         }
         input[type="text"]:focus { outline: none; border-color: var(--primary); }
         
-        button {
-            border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; cursor: pointer;
-            font-size: 1rem; color: white; transition: 0.2s; white-space: nowrap;
+        button { 
+            border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; 
+            font-size: 1rem; color: white; transition: 0.2s; white-space: nowrap; 
         }
         .btn-primary { background: var(--primary); }
         .btn-primary:active { transform: scale(0.95); }
         .btn-secondary { background: #3a3a40; font-size: 0.9rem; width: 100%; margin-top: 10px; }
-        
-        /* Boutons d'action */
-        .action-buttons { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
-        .action-buttons button { flex: 1; min-width: 120px; }
 
-        /* Classes utilitaires */
-        .mobile-only { display: none; }
-
-        /* GRILLE VOD */
-        #vod-list {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
-            margin-top: 20px; max-height: 50vh; overflow-y: auto; padding: 5px; display: none;
+        #vod-list { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; 
+            margin-top: 20px; max-height: 50vh; overflow-y: auto; padding: 5px; display: none; 
         }
-        .vod-card {
-            background: #26262c; border-radius: 10px; overflow: hidden; cursor: pointer; text-align: left;
-        }
+        .vod-card { background: #26262c; border-radius: 10px; overflow: hidden; cursor: pointer; text-align: left; }
         .vod-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
         .vod-info { padding: 8px; }
         .vod-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .vod-meta { font-size: 0.7rem; color: #aaa; }
 
-        /* VIDEO & PLYR */
-        #video-container {
-            width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: none;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-        }
+        #video-container { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
         .plyr { --plyr-color-main: #9146ff; border-radius: 12px; }
 
-        #options-bar {
-            display: none; flex-direction: column; gap: 10px; margin-bottom: 20px;
-            background: #1f1f23; padding: 15px; border-radius: 12px;
+        #options-bar, .vlc-section { 
+            display: none; flex-direction: column; gap: 10px; margin-bottom: 20px; 
+            background: #1f1f23; padding: 15px; border-radius: 12px; 
         }
-        select {
-            background: #26262c; color: white; border: 1px solid #3a3a40; padding: 10px;
-            border-radius: 8px; font-size: 1rem; width: 100%;
-        }
+        select { background: #26262c; color: white; border: 1px solid #3a3a40; padding: 10px; border-radius: 8px; font-size: 1rem; width: 100%; }
 
-        .vlc-section {
-            background: #1f1f23; padding: 15px; border-radius: 12px; border: 1px solid #333;
-            display: none; flex-direction: column; gap: 10px; margin-top: 20px;
-        }
         input.vlc-link { width: 100%; font-family: monospace; color: #bf94ff; text-align: center; font-size: 0.8rem; }
 
         #status-msg { margin-bottom: 15px; font-weight: 500; min-height: 1.2em; font-size: 0.9rem; }
-        .status-loading { color: #e6e619; }
-        .status-success { color: #00ff88; }
-        .status-error { color: #ff4f4d; }
+        .status-loading { color: #e6e619; } .status-success { color: #00ff88; } .status-error { color: #ff4f4d; }
 
-        @media (max-width: 600px) {
-            .container { padding: 15px; width: 100%; border-radius: 0; box-shadow: none; }
-            body { padding: 0; }
-            .search-bar { flex-direction: column; }
-            button { width: 100%; }
+        @media (max-width: 600px) { 
+            .container { padding: 15px; padding-top: 45px; width: 100%; border-radius: 0; box-shadow: none; } 
+            body { padding: 0; } .search-bar { flex-direction: column; } button { width: 100%; }
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -126,17 +124,23 @@
 <body>
 
     <div class="container">
-        <h1>Watch Twitch VODs Without Subscription</h1>
+        
+        <select id="langSelect" onchange="setLanguage(this.value)" title="Language">
+            <option value="fr">FR</option>
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+        </select>
+
+        <h1 data-lang="title">Watch Twitch VODs Without Subscription</h1>
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('direct')">Lien / ID</button>
-            <button class="tab-btn" onclick="switchTab('channel')">Streamer</button>
+            <button class="tab-btn active" onclick="switchTab('direct')" data-lang="tab_id">Lien / ID</button>
+            <button class="tab-btn" onclick="switchTab('channel')" data-lang="tab_streamer">Streamer</button>
         </div>
 
         <div id="mobile-alert" class="mobile-only">
-            <strong>📱 Mode Mobile</strong>
-            Astuce : utilisez Outplayer ou VLC pour une meilleure lecture.
-            <div class="action-buttons" style="margin-top:10px;">
+            <strong data-lang="mobile_title">📱 Mode Mobile</strong> <span data-lang="mobile_desc">Astuce : utilisez Outplayer ou VLC.</span>
+            <div style="display:flex; gap:10px; margin-top:10px;">
                 <button class="btn-secondary" style="background:var(--outplayer)" onclick="openInOutplayer()">Outplayer</button>
                 <button class="btn-secondary" style="background:var(--vlc)" onclick="openInVLC_Mobile()">VLC</button>
             </div>
@@ -144,157 +148,311 @@
 
         <div id="tab-direct" class="tab-content active">
             <div class="search-bar">
-                <input type="text" id="vodInput" placeholder="ID ou Lien de la VOD">
-                <button class="btn-primary" onclick="searchVodById()">Déverrouiller</button>
+                <input type="text" id="vodInput" placeholder="ID ou Lien de la VOD" data-placeholder="ph_id">
+                <button class="btn-primary" onclick="searchVodById()" data-lang="btn_unlock">Déverrouiller</button>
             </div>
         </div>
 
         <div id="tab-channel" class="tab-content">
             <div class="search-bar">
-                <input type="text" id="channelInput" placeholder="Nom du Streamer">
-                <button class="btn-primary" onclick="searchChannel()">Chercher</button>
+                <input type="text" id="channelInput" placeholder="Nom du Streamer" data-placeholder="ph_streamer">
+                <button class="btn-primary" onclick="searchStreamer()" data-lang="btn_search">🔍 Chercher (Live & VODs)</button>
             </div>
-            <div id="vod-list"></div>
+            <div id="live-area"></div>
         </div>
 
-        <div id="status-msg">Prêt.</div>
+        <div id="status-msg" data-lang="status_ready">Prêt.</div>
 
         <div id="video-container">
             <video id="player" playsinline controls crossorigin></video>
         </div>
 
         <div id="options-bar">
-        <label>Qualité :</label>
-        <select id="qualitySelect" onchange="changeQuality()"></select>
-        
-        <button class="btn-secondary" onclick="togglePiP()" style="background-color: #e6e619; color: black; margin-bottom: 10px;">
-        📺 Activer le mode PiP
-        </button>
-    
-        <button class="btn-secondary" onclick="downloadM3U8()">📥 Télécharger la vidéo (Fichier)</button>
+            <label data-lang="lbl_quality">Qualité :</label>
+            <select id="qualitySelect" onchange="changeQuality()"></select>
+            <button class="btn-secondary" onclick="togglePiP()" style="background-color: #e6e619; color: black;" data-lang="btn_pip">📺 Activer PiP</button>
+            <button class="btn-secondary" onclick="downloadM3U8()" data-lang="btn_dl">📥 Télécharger (Fichier)</button>
         </div>
 
         <div id="vlc-section" class="vlc-section">
-            <div style="font-size: 0.8rem; color: #aaa;">Lien externe / Lecteur :</div>
+            <div style="font-size: 0.8rem; color: #aaa;" data-lang="lbl_link">Lien externe :</div>
             <input type="text" id="vlcLink" class="vlc-link" readonly onclick="this.select()">
-            
-            <div class="action-buttons">
-                <button class="btn-secondary" onclick="copyLink()">Copier</button>
-                
+            <div style="display:flex; gap:10px;">
+                <button class="btn-secondary" onclick="copyLink()" data-lang="btn_copy">Copier</button>
                 <button class="btn-secondary mobile-only" style="background:var(--outplayer)" onclick="openInOutplayer()">Outplayer</button>
                 <button class="btn-secondary mobile-only" style="background:var(--vlc)" onclick="openInVLC_Mobile()">VLC App</button>
             </div>
         </div>
+
+        <div id="vod-list"></div>
     </div>
 
     <script>
+        // --- CONFIGURATION ---
+        const translations = {
+            fr: {
+                title: "Regarder Twitch sans Sub",
+                tab_id: "Lien / ID",
+                tab_streamer: "Streamer",
+                mobile_title: "📱 Mode Mobile",
+                mobile_desc: "Astuce : utilisez Outplayer ou VLC.",
+                ph_id: "ID ou Lien de la VOD",
+                btn_unlock: "Déverrouiller",
+                ph_streamer: "Nom du Streamer",
+                btn_search: "🔍 Chercher (Live & VODs)",
+                status_ready: "Prêt.",
+                lbl_quality: "Qualité :",
+                btn_pip: "📺 Activer PiP",
+                btn_dl: "📥 Télécharger (Fichier)",
+                lbl_link: "Lien externe :",
+                btn_copy: "Copier",
+                err_missing: "Nom manquant.",
+                loading: "Recherche de",
+                live_on: "🔴 EN DIRECT !",
+                btn_watch_live: "▶️ Regarder le Live",
+                live_msg_vod: "En live (mais pas de VODs).",
+                no_vod: "Aucune VOD trouvée.",
+                vods_found: "VODs trouvées.",
+                err_network: "Erreur réseau.",
+                err_live: "Erreur Live.",
+                loading_vod: "Chargement VOD...",
+                vod_ready: "VOD Prête !",
+                err_conn: "Erreur connexion.",
+                copied: "Lien copié !",
+                live_plays: "Joue à : "
+            },
+            en: {
+                title: "Watch Twitch No Sub",
+                tab_id: "Link / ID",
+                tab_streamer: "Streamer",
+                mobile_title: "📱 Mobile Mode",
+                mobile_desc: "Tip: use Outplayer or VLC app.",
+                ph_id: "VOD ID or Link",
+                btn_unlock: "Unlock",
+                ph_streamer: "Streamer Name",
+                btn_search: "🔍 Search (Live & VODs)",
+                status_ready: "Ready.",
+                lbl_quality: "Quality:",
+                btn_pip: "📺 Toggle PiP",
+                btn_dl: "📥 Download (File)",
+                lbl_link: "External Link:",
+                btn_copy: "Copy",
+                err_missing: "Name missing.",
+                loading: "Searching for",
+                live_on: "🔴 LIVE NOW!",
+                btn_watch_live: "▶️ Watch Live",
+                live_msg_vod: "Live is on (but no VODs).",
+                no_vod: "No VODs found.",
+                vods_found: "VODs found.",
+                err_network: "Network error.",
+                err_live: "Live error.",
+                loading_vod: "Loading VOD...",
+                vod_ready: "VOD Ready!",
+                err_conn: "Connection error.",
+                copied: "Link copied!",
+                live_plays: "Playing: "
+            },
+            es: {
+                title: "Ver Twitch sin Sub",
+                tab_id: "Enlace / ID",
+                tab_streamer: "Streamer",
+                mobile_title: "📱 Modo Móvil",
+                mobile_desc: "Consejo: usa Outplayer o VLC.",
+                ph_id: "ID o Enlace VOD",
+                btn_unlock: "Desbloquear",
+                ph_streamer: "Nombre del Streamer",
+                btn_search: "🔍 Buscar (Live & VODs)",
+                status_ready: "Listo.",
+                lbl_quality: "Calidad:",
+                btn_pip: "📺 Modo PiP",
+                btn_dl: "📥 Descargar",
+                lbl_link: "Enlace externo:",
+                btn_copy: "Copiar",
+                err_missing: "Falta el nombre.",
+                loading: "Buscando a",
+                live_on: "🔴 EN VIVO!",
+                btn_watch_live: "▶️ Ver Directo",
+                live_msg_vod: "En vivo (sin VODs).",
+                no_vod: "No se encontraron VODs.",
+                vods_found: "VODs encontrados.",
+                err_network: "Error de red.",
+                err_live: "Error de directo.",
+                loading_vod: "Cargando VOD...",
+                vod_ready: "VOD Listo!",
+                err_conn: "Error de conexión.",
+                copied: "Enlace copiado!",
+                live_plays: "Jugando a: "
+            }
+        };
+
+        let currentLang = 'fr'; // Langue par défaut
         let currentLinks = {};
         let hls = null;
         let player = null;
+        
+        const elements = {
+            status: document.getElementById('status-msg'),
+            vodList: document.getElementById('vod-list'),
+            videoContainer: document.getElementById('video-container'),
+            optionsBar: document.getElementById('options-bar'),
+            vlcSection: document.getElementById('vlc-section'),
+            qualitySelect: document.getElementById('qualitySelect'),
+            vlcInput: document.getElementById('vlcLink'),
+            liveArea: document.getElementById('live-area'),
+            langSelect: document.getElementById('langSelect')
+        };
 
-        const statusEl = document.getElementById('status-msg');
-        const mobileAlert = document.getElementById('mobile-alert');
-        const optionsBar = document.getElementById('options-bar');
-        const qualitySelect = document.getElementById('qualitySelect');
-        const videoContainer = document.getElementById('video-container');
-        const vlcSection = document.getElementById('vlc-section');
-        const video = document.getElementById('player');
-        const vlcInput = document.getElementById('vlcLink');
-        const vodList = document.getElementById('vod-list');
-
+        // --- DÉMARRAGE ---
         document.addEventListener('DOMContentLoaded', () => {
-    
-        player = new Plyr(video, {
+            // 1. Détection Langue
+            const userLang = navigator.language.slice(0, 2);
+            if (translations[userLang]) {
+                setLanguage(userLang);
+            } else {
+                setLanguage('fr');
+            }
 
-        controls: [
-        'play-large', 'play', 'progress', 'current-time', 
-        'mute', 'volume', 'settings', 
-        'pip', 'airplay', 'fullscreen'
-        ],
-        settings: ['speed']
+            // 2. Player
+            player = new Plyr('#player', {
+                controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'airplay', 'fullscreen'],
+                settings: ['speed']
+            });
+
+            // 3. Gestion URL (ID ou Chaîne)
+            const urlParams = new URLSearchParams(window.location.search);
+            const idFromUrl = urlParams.get('id');
+            const channelFromUrl = urlParams.get('channel');
+
+            if (idFromUrl) {
+                document.getElementById('vodInput').value = idFromUrl;
+                switchTab('direct');
+                searchVodById();
+            } else if (channelFromUrl) {
+                document.getElementById('channelInput').value = channelFromUrl;
+                switchTab('channel');
+                // ON LANCE LA RECHERCHE EN MODE AUTO-PLAY (true)
+                searchStreamer(true);
+            }
+
+            // 4. Mobile Check
+            if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'block');
+            }
         });
-    
-        // --- AJOUT : DÉTECTION AUTOMATIQUE DE L'ID DANS L'URL ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const idFromUrl = urlParams.get('id');
 
-        if (idFromUrl) {
-        // On remplit le champ et on lance la recherche
-        document.getElementById('vodInput').value = idFromUrl;
-        switchTab('direct'); // On passe sur l'onglet "Direct"
-        searchVodById();     // On lance la vidéo !
+        // --- FONCTIONS ---
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            
+            if (elements.langSelect) elements.langSelect.value = lang;
+
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (t[key]) el.textContent = t[key];
+            });
+
+            document.querySelectorAll('[data-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
         }
 
-        if (isMobile()) {
-            // Cette ligne rend visible tous les éléments avec la classe "mobile-only"
-            document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'block');
-        }
-        });
-
-        function isMobile() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        function txt(key) {
+            return translations[currentLang][key] || key;
         }
 
-        function setStatus(msg, type) {
-            statusEl.textContent = msg;
-            statusEl.className = type ? 'status-' + type : '';
+        function setStatus(msgKey, type, extra = "") {
+            const text = translations[currentLang][msgKey] ? translations[currentLang][msgKey] : msgKey;
+            elements.status.textContent = text + extra;
+            elements.status.className = type ? 'status-' + type : '';
         }
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
             if (tab === 'direct') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('tab-direct').classList.add('active');
+                if(elements.vodList) elements.vodList.style.display = 'none';
             } else {
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('tab-channel').classList.add('active');
+                if (elements.vodList && elements.vodList.children.length > 0) {
+                    elements.vodList.style.display = 'grid';
+                }
             }
         }
 
-        async function searchChannel() {
+        // --- MODIFIÉ : ACCEPTE MAINTENANT UN PARAMÈTRE AUTO-PLAY ---
+        async function searchStreamer(autoPlay = false) {
             const channelName = document.getElementById('channelInput').value.trim();
-            if (!channelName) return setStatus("Nom manquant.", 'error');
+            if (!channelName) return setStatus("err_missing", 'error');
 
-            setStatus(`Recherche...`, 'loading');
-            vodList.style.display = 'none';
+            setStatus("loading", 'loading', ` ${channelName}...`);
+            elements.vodList.style.display = 'none';
+            elements.liveArea.innerHTML = '';
             hidePlayer();
 
-            try {
-                const response = await fetch(`/api/get-channel-videos?name=${channelName}`);
-                const data = await response.json();
+            const pVods = fetch(`/api/get-channel-videos?name=${channelName}`);
+            const pLive = fetch(`/api/get-live?name=${channelName}`);
 
-                if (data.error) {
-                    setStatus(data.error, 'error');
-                    return;
+            try {
+                const [resVods, resLive] = await Promise.all([pVods, pLive]);
+                const dataLive = await resLive.json();
+
+                if (!dataLive.error) {
+                    const gameInfo = dataLive.game ? `[${txt('live_plays')} ${dataLive.game}]` : "";
+                    
+                    // Affiche le panneau
+                    elements.liveArea.innerHTML = `
+                        <div style="background: rgba(233, 25, 22, 0.15); border: 2px solid #e91916; padding: 15px; border-radius: 12px; margin-bottom: 25px; animation: fadeIn 0.5s;">
+                            <h3 style="color: #ff4f4d; margin-bottom: 8px;">${txt('live_on')}</h3>
+                            <p>${dataLive.title}<br><span style="color:#bbb; font-size:0.9rem;">${gameInfo}</span></p>
+                            <button class="btn-primary" style="background-color: #e91916; width: 100%; margin-top:10px;" onclick="watchLive()">${txt('btn_watch_live')}</button>
+                        </div>`;
+                    
+                    // SI AUTO-PLAY EST ACTIVÉ, ON LANCE LE LIVE DIRECTEMENT
+                    if (autoPlay) {
+                        watchLive();
+                    }
                 }
 
-                setStatus(`${data.videos.length} VODs trouvées.`, 'success');
-                vodList.innerHTML = '';
-                vodList.style.display = 'grid';
+                const dataVods = await resVods.json();
+                if (dataVods.error) {
+                    const msg = elements.liveArea.innerHTML ? "live_msg_vod" : "no_vod";
+                    setStatus(msg, elements.liveArea.innerHTML ? 'success' : 'error');
+                } else {
+                    setStatus(`${dataVods.videos.length} ${txt('vods_found')}`, 'success');
+                    elements.vodList.innerHTML = '';
+                    elements.vodList.style.display = 'grid';
+                    dataVods.videos.forEach(vod => {
+                        const card = document.createElement('div');
+                        card.className = 'vod-card';
+                        card.onclick = () => loadVodFromCard(vod.id);
+                        const duration = Math.floor(vod.lengthSeconds / 60) + ' min';
+                        const date = new Date(vod.publishedAt).toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US');
+                        card.innerHTML = `<img src="${vod.previewThumbnailURL}" class="vod-thumb"><div class="vod-info"><div class="vod-title">${vod.title}</div><div class="vod-meta">${date} • ${duration}</div></div>`;
+                        elements.vodList.appendChild(card);
+                    });
+                }
+            } catch (e) { setStatus("err_network", 'error'); }
+        }
 
-                data.videos.forEach(vod => {
-                    const card = document.createElement('div');
-                    card.className = 'vod-card';
-                    card.onclick = () => loadVodFromCard(vod.id); 
+        async function watchLive() {
+            const channelName = document.getElementById('channelInput').value.trim();
+            try {
+                // NOTE : On ne cache plus vodList ici pour qu'elle reste visible en bas !
+                // elements.vodList.style.display = 'none'; <--- RETIRÉ
+                
+                const response = await fetch(`/api/get-live?name=${channelName}`);
+                const data = await response.json();
+                if (data.error) return setStatus(data.error, 'error');
 
-                    const minutes = Math.floor(vod.lengthSeconds / 60);
-                    const hours = Math.floor(minutes / 60);
-                    const remainingMin = minutes % 60;
-                    const durationStr = hours > 0 ? `${hours}h${remainingMin}` : `${minutes}min`;
-                    const dateStr = new Date(vod.publishedAt).toLocaleDateString('fr-FR');
-
-                    card.innerHTML = `
-                        <img src="${vod.previewThumbnailURL}" class="vod-thumb" loading="lazy">
-                        <div class="vod-info">
-                            <div class="vod-title">${vod.title}</div>
-                            <div class="vod-meta">${dateStr} • ${durationStr}</div>
-                        </div>
-                    `;
-                    vodList.appendChild(card);
-                });
-
-            } catch (e) { setStatus("Erreur serveur.", 'error'); }
+                setupPlayer(data.links);
+                setStatus(`🔴 ${data.title}`, 'success');
+            } catch (e) { setStatus("err_live", 'error'); }
         }
 
         function loadVodFromCard(id) {
@@ -304,167 +462,90 @@
         }
 
         async function searchVodById() {
-            const input = document.getElementById('vodInput').value;
-            const vodId = extractVodId(input);
-            if (!vodId) return setStatus("ID invalide.", 'error');
-
-            setStatus("Déverrouillage...", 'loading');
+            const id = (document.getElementById('vodInput').value.match(/\d{8,}/) || [])[0];
+            if (!id) return setStatus("ID invalide.", 'error');
+            setStatus("loading_vod", 'loading');
             hidePlayer();
 
             try {
-                const response = await fetch(`/api/get-m3u8?id=${vodId}`);
+                const response = await fetch(`/api/get-m3u8?id=${id}`);
                 const data = await response.json();
+                if (data.error) return setStatus(data.error, 'error');
 
-                if (data.error) {
-                    setStatus(data.error, 'error');
-                    return;
-                }
+                setupPlayer(data.links);
+                setStatus("vod_ready", 'success');
+            } catch (e) { setStatus("err_conn", 'error'); }
+        }
 
-                currentLinks = data.links;
-                qualitySelect.innerHTML = '';
-                
-                for (const [quality, url] of Object.entries(currentLinks)) {
-                    const option = document.createElement('option');
-                    option.value = quality;
-                    option.textContent = formatQualityName(quality);
-                    qualitySelect.appendChild(option);
-                }
-
-                setStatus("VOD Prête !", 'success');
-                showPlayer();
-                changeQuality();
-
-            } catch (e) { setStatus("Erreur de connexion.", 'error'); }
+        function setupPlayer(links) {
+            currentLinks = links;
+            elements.qualitySelect.innerHTML = '';
+            for (const [q, url] of Object.entries(links)) {
+                const opt = document.createElement('option');
+                opt.value = q;
+                opt.textContent = q.toUpperCase().replace('CHUNKED', 'SOURCE');
+                elements.qualitySelect.appendChild(opt);
+            }
+            elements.optionsBar.style.display = 'flex';
+            elements.videoContainer.style.display = 'block';
+            elements.vlcSection.style.display = 'flex';
+            changeQuality();
         }
 
         function changeQuality() {
-    const rawUrl = currentLinks[qualitySelect.value];
-    if (!rawUrl) return;
-
-    // --- MODIFICATION ICI : On passe par le proxy ---
-    // On encode l'URL pour qu'elle passe bien dans les paramètres
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(rawUrl)}`;
-    
-    // On met à jour l'input VLC avec le VRAI lien (pour copier-coller)
-    vlcInput.value = rawUrl; 
-
-    if (Hls.isSupported()) {
-        if (hls) hls.destroy();
-        hls = new Hls();
-        
-        // On charge l'URL du PROXY dans le lecteur
-        hls.loadSource(proxyUrl);
-        
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Pour Safari (iPhone), on utilise aussi le proxy
-        video.src = proxyUrl;
-        video.play();
-    }
-}
-        function extractVodId(input) {
-            const match = input.match(/(?:videos\/|v\/)?(\d{8,})/);
-            return match ? match[1] : input.trim();
-        }
-
-        function formatQualityName(key) {
-            if (key === 'chunked' || key === 'source') return 'Source';
-            if (key === 'audio_only') return 'Audio';
-            return key.replace(/p(\d+)/, 'p ($1fps)').toUpperCase();
-        }
-
-        // --- NOUVELLE FONCTION DE TÉLÉCHARGEMENT ---
-        // Cette version crée un vrai fichier .m3u8 au lieu d'ouvrir un onglet
-        function downloadM3U8() {
-            const url = vlcInput.value;
-            if (!url) return alert("Aucune vidéo chargée !");
-
-            // Contenu du fichier playlist
-            const m3uContent = `#EXTM3U\n#EXTINF:-1,Twitch VOD\n${url}`;
+            const rawUrl = currentLinks[elements.qualitySelect.value];
+            if (!rawUrl) return;
+            const proxyUrl = `/api/proxy?url=${encodeURIComponent(rawUrl)}`;
+            elements.vlcInput.value = rawUrl;
             
-            // Création du fichier "virtuel"
-            const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'twitch_vod.m3u'; // Nom du fichier
-            
-            // Clic automatique
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function copyLink() {
-            vlcInput.select();
-            navigator.clipboard.writeText(vlcInput.value);
-            const btn = document.querySelector('.action-buttons button:first-child');
-            const oldText = btn.textContent;
-            btn.textContent = "Copié !";
-            btn.style.background = "#28a745";
-            setTimeout(() => { 
-                btn.textContent = oldText; 
-                btn.style.background = ""; 
-            }, 2000);
-        }
-
-        // --- FONCTIONS MOBILES ---
-        function openInVLC_Mobile() {
-            const url = vlcInput.value;
-            if (url) window.location.href = 'vlc://' + url;
-            else alert("Chargez une vidéo d'abord !");
-        }
-
-        function openInOutplayer() {
-            const url = vlcInput.value;
-            if (url) window.location.href = 'outplayer://' + url;
-            else alert("Chargez une vidéo d'abord !");
-        }
-
-        function hidePlayer() {
-            optionsBar.style.display = 'none';
-            videoContainer.style.display = 'none';
-            vlcSection.style.display = 'none';
-            if (hls) { hls.destroy(); hls = null; }
-            player.stop();
-        }
-
-        function showPlayer() {
-            optionsBar.style.display = 'flex';
-            videoContainer.style.display = 'block';
-            vlcSection.style.display = 'flex';
-        }
-
-        // --- COLLE LA FONCTION ICI, JUSTE AVANT LA FIN ---
-
-        // --- FONCTION PIP UNIVERSELLE (Compatible iOS & PC) ---
-        function togglePiP() {
             const video = document.getElementById('player');
-            
-            // 1. Méthode Standard (Chrome, Edge, Firefox)
-            if (document.pictureInPictureEnabled) {
-                if (document.pictureInPictureElement) {
-                    document.exitPictureInPicture();
-                } else {
-                    video.requestPictureInPicture();
-                }
-            } 
-            // 2. Méthode Apple iOS (iPhone/iPad)
-            else if (video.webkitSupportsPresentationMode && typeof video.webkitSetPresentationMode === "function") {
-                const mode = video.webkitPresentationMode === "picture-in-picture" ? "inline" : "picture-in-picture";
-                video.webkitSetPresentationMode(mode);
-            } 
-            else {
-                alert("Le mode PiP n'est pas supporté par ce navigateur.");
+            if (Hls.isSupported()) {
+                if (hls) hls.destroy();
+                hls = new Hls();
+                hls.loadSource(proxyUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = proxyUrl;
+                video.play();
             }
         }
 
+        function hidePlayer() {
+            elements.optionsBar.style.display = 'none';
+            elements.videoContainer.style.display = 'none';
+            elements.vlcSection.style.display = 'none';
+            if (hls) hls.destroy();
+            player.stop();
+        }
+
+        function togglePiP() {
+            const video = document.getElementById('player');
+            if (document.pictureInPictureEnabled) {
+                document.pictureInPictureElement ? document.exitPictureInPicture() : video.requestPictureInPicture();
+            } else if (video.webkitSetPresentationMode) {
+                video.webkitSetPresentationMode(video.webkitPresentationMode === "picture-in-picture" ? "inline" : "picture-in-picture");
+            } else alert("PiP non supporté.");
+        }
+
+        function downloadM3U8() {
+            const url = elements.vlcInput.value;
+            if (!url) return;
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([`#EXTM3U\n#EXTINF:-1,Twitch VOD\n${url}`], { type: 'audio/x-mpegurl' }));
+            link.download = 'video.m3u';
+            link.click();
+        }
+
+        function copyLink() {
+            elements.vlcInput.select();
+            navigator.clipboard.writeText(elements.vlcInput.value);
+            alert(txt('copied'));
+        }
+        
+        function openInVLC_Mobile() { window.location.href = 'vlc://' + elements.vlcInput.value; }
+        function openInOutplayer() { window.location.href = 'outplayer://' + elements.vlcInput.value; }
     </script>
 </body>
 </html>
-
-
-
-
-
 
